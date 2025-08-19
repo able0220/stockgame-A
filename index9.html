@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/NanumSquareRound.css" rel="stylesheet">
+  <title>2009년 투자 결과[A]</title>
+  <style>
+    body {
+      font-family: 'SUITE', 'NanumSquareRound', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #eaf4fb;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1187px;
+      background: white;
+      border-radius: 16px;
+      margin-top: 2rem;
+      box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    header {
+      background: #6ea5ee;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 2rem;
+      border-radius: 16px 16px 0 0;
+      position: relative;
+    }
+
+    .header-left {
+      position: absolute;
+      left: 2rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .header-left img {
+      height: 80px;
+      width: auto;
+    }
+
+    .header-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .header-right {
+      position: absolute;
+      right: 2rem;
+      font-size: 4rem;
+      font-weight: bold;
+      opacity: 0.3;
+      font-style: italic;
+    }
+
+    .result-table {
+      width: calc(100% - 4rem); /* 2rem 좌우 여백 고려 */
+      margin: 1rem 2rem;
+      table-layout: auto; /* fixed 대신 auto 로 변경 */
+      border-collapse: collapse;
+    }
+
+    .result-table th,
+    .result-table td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+      font-size: 1rem;
+      word-break: keep-all; /* 영어 단위로 줄바꿈 */
+      white-space: normal;
+    }
+
+    .result-table th {
+      background-color: #f0f6fd;
+      font-weight: 700;
+      color: #2f80ed;
+    }
+
+    .result-table td.amount-right {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-table td.profit-positive {
+      color: red;
+      font-weight: bold;
+    }
+
+    .result-table td.profit-negative {
+      color: #0000ff;
+      font-weight: bold;
+    }
+
+    .result-table td.final-asset {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #222;      
+      text-align: right; /* 👉 오른쪽 정렬 추가 */
+    }
+
+
+    .button-wrapper {
+      display: flex;
+      justify-content: center;  /* 👉 버튼을 수평 중앙으로 */
+      gap: 1rem; /* 👉 버튼 간격 */
+      margin-bottom: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .button-wrapper button {
+      background: #2f80ed;
+      color: white;
+      border: none;
+      padding: 0.8rem 2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: bold;
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <img src="https://able0220.github.io/stockgameb/에이블 로고.png" alt="로고" />
+      </div>
+      <div class="header-title">2010년 [2009년 법인별 결과]</div>
+      <div class="header-right">A</div>
+    </header>
+
+    <div id="results"></div>
+
+    <div class="button-wrapper">
+      <button onclick="showResults()">📊 결과 보기</button>
+      <button onclick="goToGamePage()">▶️ 2010년 투자 시작</button>
+    </div>
+  </div>
+
+<script>
+const teamNames = JSON.parse(sessionStorage.getItem("teamNames") || "[]");
+const investments = JSON.parse(sessionStorage.getItem("teamInvestments2009") || "{}");
+const teamCapitals = JSON.parse(localStorage.getItem("capitalMap") || "{}");
+
+const companyResults = {
+  A: "-1%", B: "64%", C: "25%", D: "274%", E: "64%",
+  F: "60%", G: "106%", H: "15%", I: "201%", J: "169%", K: "95%", L: "55%"
+};
+
+const resultsDiv = document.getElementById("results");
+function renderAllTeamResults() {
+  let html = `
+    <table class="result-table">
+      <tr>
+        <th>법인명</th>
+        <th>최종 자산<br>(만원)</th>
+        <th>2009년 자본금<br>(만원)</th>
+        <th>투자 기업</th>
+        <th>투자 금액<br>(만원)</th>
+        <th>수익<br>(만원)</th>
+        <th>남은 금액<br>(만원, 상승 반영)</th>
+      </tr>
+  `;
+
+  const companies = Object.keys(companyResults);
+  const newCapitalMap = {};
+
+  teamNames.forEach(team => {
+    const teamInvest = investments[team] || {};
+    const teamCapital = Number(teamCapitals[team]) || 12000;
+
+    let investedCompanies = [];
+    let totalInvested = 0;
+    let totalProfit = 0;
+
+    companies.forEach(company => {
+      const amount = Number(teamInvest[company]) || 0;
+      if (amount > 0) investedCompanies.push(company);
+
+      const rateStr = companyResults[company];
+      const rate = parseFloat(rateStr.replace('%', '')) / 100;
+      totalProfit += amount * rate;
+      totalInvested += amount;
+    });
+
+    const uninvested = teamCapital - totalInvested;
+    const inflationBonus = Math.round(uninvested * 0.1);
+    const finalProfit = Math.round(totalProfit);
+    const enhancedUninvested = uninvested + inflationBonus;
+    const finalAsset = totalInvested + finalProfit + enhancedUninvested;
+
+    if (investedCompanies.length === 0) investedCompanies.push("투자기업 없음");
+
+    html += `
+      <tr>
+        <td>${team}</td>
+        <td class="final-asset">${finalAsset.toLocaleString()}</td>
+        <td class="amount-right">${teamCapital.toLocaleString()}</td>
+        <td>${investedCompanies.join(', ')}</td>
+        <td class="amount-right">${totalInvested.toLocaleString()}</td>
+        <td class="amount-right" style="color: ${finalProfit > 0 ? 'red' : finalProfit < 0 ? 'blue' : 'black'};">
+          <strong>${finalProfit.toLocaleString()}</strong>
+        </td>
+        <td class="amount-right">${enhancedUninvested.toLocaleString()}</td>
+      </tr>
+    `;
+
+    newCapitalMap[team] = finalAsset;
+  });
+
+    // ✅ 저장: 결과 버튼 눌렀을 때 한 번만 저장됨
+    if (localStorage.getItem("capitalUpdated2009") !== "true") {
+      localStorage.setItem("capitalMap_2010", JSON.stringify(newCapitalMap));
+      localStorage.setItem("capitalUpdated2009", "true");
+    }
+
+  html += "</table>";
+  resultsDiv.innerHTML = html;
+}
+
+resultsDiv.style.display = "none";
+
+function showResults() {
+  renderAllTeamResults();
+  resultsDiv.style.display = "block";
+
+  // 무조건 저장 (버튼 안 눌러도 됨)
+const companies = Object.keys(companyResults);
+const newCapitalMap = {};
+
+teamNames.forEach(team => {
+  const teamInvest = investments[team] || {};
+  const teamCapital = Number(teamCapitals[team]) || 12000;
+
+  let totalInvested = 0;
+  let totalProfit = 0;
+
+  companies.forEach(company => {
+    const amount = Number(teamInvest[company]) || 0;
+    const rateStr = companyResults[company];
+    const rate = parseFloat(rateStr.replace('%', '')) / 100;
+    totalProfit += amount * rate;
+    totalInvested += amount;
+  });
+
+  const uninvested = teamCapital - totalInvested;
+  const inflationBonus = Math.round(uninvested * 0.1);
+  const finalProfit = Math.round(totalProfit);
+  const enhancedUninvested = uninvested + inflationBonus;
+  const finalAsset = totalInvested + finalProfit + enhancedUninvested;
+
+  newCapitalMap[team] = finalAsset;
+});
+
+localStorage.setItem("capitalMap_2010", JSON.stringify(newCapitalMap));
+}
+
+function goToGamePage() {
+  alert("이제 2010년 투자를 시작합니다.");
+  window.location.href = "index10.html";
+}
+</script>
+
+
+</body>
+</html>
