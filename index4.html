@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <link href="https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2107@1.1/NanumSquareRound.css" rel="stylesheet">
+
   <title>2005년 기업 결과[A]</title>
+
   <style>
+
     body {
       font-family: 'SUITE', 'NanumSquareRound', Arial, sans-serif;
       margin: 0;
@@ -25,7 +30,7 @@
       border-radius: 16px;
       margin-top: 2rem;
       box-shadow: 4px 4px 20px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
+      overflow: visible;
     }
 
     header {
@@ -66,7 +71,6 @@
       font-style: italic;
     }
 
-
     .button-group {
       display: flex;
       flex-wrap: wrap;
@@ -75,7 +79,12 @@
       margin: 30px 0;
     }
 
-    .button-group button {
+    .company-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .company-button {
       font-size: 1rem;
       font-weight: 600;
       padding: 8px 20px;
@@ -87,12 +96,66 @@
       transition: background 0.2s;
     }
 
-    .button-group button:hover {
+    .company-button:hover {
       background-color: #166edb;
     }
 
+.investor-popup {
+  display: none;
+  position: absolute;
+
+  /* 버튼 위에 표시 */
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: white;
+  color: #333;
+
+  min-width: 170px;
+  padding: 12px 16px;
+
+  border-radius: 12px;
+
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+
+  text-align: center;
+
+  font-size: 0.95rem;
+  line-height: 1.7;
+
+  z-index: 1000;
+  max-width: 350px;
+white-space: normal;
+}
+
+    .company-wrapper:hover .investor-popup {
+      display: block;
+    }
+
+    .popup-title {
+      font-weight: 800;
+      color: #2f80ed;
+      margin-bottom: 5px;
+      font-size: 1rem;
+    }
+
+    .investor-name {
+      font-weight: 400;
+      color: #333;
+    }
+
+    .investor-name.all-in {
+      font-weight: 900;
+      color: #222;
+    }
+
+    .no-investor {
+      color: #999;
+    }
+
     .result-box {
-      font-size: 2rem; /* 작고 깔끔하게 */
+      font-size: 2rem;
       font-weight: 600;
       color: #444;
       text-align: center;
@@ -122,40 +185,84 @@
       transition: 0.3s;
       margin-bottom: 1.5rem;
     }
+
     .next-button:hover {
       background-color: #166edb;
     }
 
   </style>
+
 </head>
+
+
 <body>
+
   <div class="container">
+
     <header>
+
       <div class="header-left">
-        <img src="https://able0220.github.io/stockgameb/에이블 로고.png" alt="로고" />
+        <img
+          src="https://able0220.github.io/stockgameb/에이블 로고.png"
+          alt="로고"
+        />
       </div>
-      <div class="header-title">2005년 투자 결과</div>
-      <div class="header-right">A</div>
+
+      <div class="header-title">
+        2005년 투자 결과
+      </div>
+
+      <div class="header-right">
+        A
+      </div>
+
     </header>
-    <div class="button-group">
-      <script>
-        for (let i = 65; i <= 76; i++) {
-          document.write(`<button onclick="showResults('${String.fromCharCode(i)}')">기업 ${String.fromCharCode(i)}</button>`);
-        }
-      </script>
+
+
+    <div
+      class="button-group"
+      id="buttonGroup">
     </div>
 
-    <div class="result-box" id="resultBox">기업 버튼을 눌러 결과를 확인하세요.</div>
+
+    <div
+      class="result-box"
+      id="resultBox">
+
+      기업 버튼을 눌러 결과를 확인하세요.
+
+    </div>
 
 
-    <div style="display: flex; justify-content: center; margin-top: 2rem;">
-      <button class="next-button" onclick="goToNextPage()">👀 법인별 결과 확인</button>
+    <div
+      style="
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+      "
+    >
+
+      <button
+        class="next-button"
+        onclick="goToNextPage()">
+
+        👀 법인별 결과 확인
+
+      </button>
+
     </div>
 
   </div>
 
+
   <script>
+
+    /* ============================
+       기업별 수익률
+    ============================ */
+
     const companyResults = {
+
       A: "-1%",
       B: "-47%",
       C: "-42%",
@@ -168,31 +275,271 @@
       J: "-52%",
       K: "-39%",
       L: "-45%"
+
     };
 
-    function showResults(companyLetter) {
-      const result = companyResults[companyLetter] || "-";
-      const resultBox = document.getElementById("resultBox");
-      resultBox.textContent = result;
 
-      // 기본 클래스 초기화
-      resultBox.className = "result-box big";
+    /* ============================
+       저장된 투자 데이터 불러오기
+    ============================ */
 
-      // 색상 조건 분기
-      if (result === "-") {
-        resultBox.style.color = "#888"; // 회색 (상장되지 않음 등)
-      } else if (result.startsWith("-")) {
-        resultBox.style.color = "#0004ff"; // 파랑 (하락)
-      } else {
-        resultBox.style.color = "red"; // 빨강 (상승)
-      }
+    const teamNames =
+      JSON.parse(
+        sessionStorage.getItem("teamNames") || "[]"
+      );
+
+
+    const teamInvestments =
+      JSON.parse(
+        sessionStorage.getItem("teamInvestments") || "{}"
+      );
+
+
+    const teamCapitals =
+      JSON.parse(
+        sessionStorage.getItem("teamCapitals") || "{}"
+      );
+
+
+    /* ============================
+       기업별 투자 법인 찾기
+    ============================ */
+
+    function getInvestors(companyLetter) {
+
+      return teamNames
+
+        .filter(teamName => {
+
+          const investment =
+            Number(
+              teamInvestments[teamName]?.[companyLetter] || 0
+            );
+
+          return investment > 0;
+
+        })
+
+        .map(teamName => {
+
+          const investment =
+            Number(
+              teamInvestments[teamName]?.[companyLetter] || 0
+            );
+
+
+          const capital =
+            Number(
+              teamCapitals[teamName] || 12000
+            );
+
+
+          /* ============================
+             올인 여부 확인
+
+             해당 기업 투자금이
+             법인 자본금과 같으면 올인
+          ============================ */
+
+          const isAllIn =
+            investment === capital;
+
+
+          return {
+
+            name: teamName,
+
+            investment: investment,
+
+            capital: capital,
+
+            isAllIn: isAllIn
+
+          };
+
+        });
+
     }
 
+
+    /* ============================
+       기업 버튼 생성
+    ============================ */
+
+    const buttonGroup =
+      document.getElementById("buttonGroup");
+
+
+    for (let i = 65; i <= 76; i++) {
+
+      const companyLetter =
+        String.fromCharCode(i);
+
+
+      const wrapper =
+        document.createElement("div");
+
+      wrapper.className =
+        "company-wrapper";
+
+
+      const button =
+        document.createElement("button");
+
+      button.className =
+        "company-button";
+
+      button.textContent =
+        `기업 ${companyLetter}`;
+
+
+      button.onclick = function () {
+
+        showResults(companyLetter);
+
+      };
+
+
+      /* ============================
+         투자 법인 정보
+      ============================ */
+
+      const investors =
+        getInvestors(companyLetter);
+
+
+      const popup =
+        document.createElement("div");
+
+      popup.className =
+        "investor-popup";
+
+
+      /* ============================
+         투자 법인이 있는 경우
+      ============================ */
+
+      if (investors.length > 0) {
+
+
+let investorHTML = investors.map(investor => {
+
+  if (investor.isAllIn) {
+    return `<span class="investor-name all-in">${investor.name}</span>`;
+  }
+
+  return `<span class="investor-name">${investor.name}</span>`;
+
+}).join(", ");
+
+
+        popup.innerHTML =
+
+          `<div class="popup-title">
+            투자 법인 (${investors.length})
+          </div>`
+
+          +
+
+          investorHTML;
+
+      }
+
+
+      /* ============================
+         투자 법인이 없는 경우
+      ============================ */
+
+      else {
+
+        popup.innerHTML =
+
+          `<div class="popup-title">
+            투자 법인 (0)
+          </div>
+
+          <div class="no-investor">
+            투자 없음
+          </div>`;
+
+      }
+
+
+      wrapper.appendChild(button);
+
+      wrapper.appendChild(popup);
+
+      buttonGroup.appendChild(wrapper);
+
+    }
+
+
+    /* ============================
+       수익률 표시
+    ============================ */
+
+    function showResults(companyLetter) {
+
+      const result =
+        companyResults[companyLetter] || "-";
+
+
+      const resultBox =
+        document.getElementById("resultBox");
+
+
+      resultBox.textContent =
+        result;
+
+
+      resultBox.className =
+        "result-box big";
+
+
+      if (result === "-") {
+
+        resultBox.style.color =
+          "#888";
+
+      }
+
+      else if (
+        result.startsWith("-")
+      ) {
+
+        resultBox.style.color =
+          "#0004ff";
+
+      }
+
+      else {
+
+        resultBox.style.color =
+          "red";
+
+      }
+
+    }
+
+
+    /* ============================
+       다음 페이지
+    ============================ */
 
     function goToNextPage() {
-      alert("2005년 투자가 종료되었습니다. 투자 결과 창으로 이동합니다.");
-      window.location.href = "index5.html";
+
+      alert(
+        "2005년 투자가 종료되었습니다. 투자 결과 창으로 이동합니다."
+      );
+
+
+      window.location.href =
+        "index5.html";
+
     }
+
   </script>
+
 </body>
+
 </html>
